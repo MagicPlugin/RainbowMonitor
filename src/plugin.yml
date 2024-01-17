@@ -1,0 +1,16 @@
+name: RainbowMonitor
+main: com.magicpowered.rainbowmonitor.RainbowMonitor
+version: 24.0.1.0
+author: JLING
+api-version: 1.13
+
+commands:
+  rm:
+    description: <reload/help>
+    usage: /<command> <reload/help>
+    aliases:
+      - rainbowmonitor
+      - rainbowm
+      - rmonitor
+      - rm
+    tab-completions: com.magicpowered.rainbowmonitor.CommandListener

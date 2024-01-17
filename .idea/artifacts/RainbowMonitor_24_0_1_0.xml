@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="RainbowMonitor-24.0.1.0">
+    <output-path>$PROJECT_DIR$/out/artifacts/RainbowMonitor_24_0_1_0</output-path>
+    <root id="archive" name="RainbowMonitor-24.0.1.0.jar">
+      <element id="module-output" name="RainbowMonitor" />
+    </root>
+  </artifact>
+</component>
