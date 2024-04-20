@@ -41,7 +41,7 @@ public class FileManager {
         }
 
         if (inventoryFile == null) {
-            inventoryFile = new File(plugin.getDataFolder(), "inventory.yml");
+            inventoryFile = new File(plugin.getDataFolder(), "log.yml");
         }
         inventory = YamlConfiguration.loadConfiguration(inventoryFile);
     }
@@ -93,10 +93,10 @@ public class FileManager {
 
 
         if (inventoryFile == null) {
-            inventoryFile = new File(plugin.getDataFolder(), "inventory.yml");
+            inventoryFile = new File(plugin.getDataFolder(), "log.yml");
         }
         if (!inventoryFile.exists()) {
-            plugin.saveResource("inventory.yml", false);
+            plugin.saveResource("log.yml", false);
         }
     }
 
@@ -106,11 +106,12 @@ public class FileManager {
 
         List<CheckItem> checkItems = new ArrayList<>();
         for (String key : getConfig().getConfigurationSection("ItemsToCheck").getKeys(false)) {
-            Material material = Material.matchMaterial(Objects.requireNonNull(config.getString("ItemsToCheck." + key + ".Material")));
+            Material material = Material.matchMaterial(Objects.requireNonNull(Objects.requireNonNull(config.getString("ItemsToCheck." + key + ".Material")).toUpperCase()));
             String name = getConfig().getString("ItemsToCheck." + key + ".Name");
             List<String> lore = getConfig().getStringList("ItemsToCheck." + key + ".Lore");
             int amount = getConfig().getInt("ItemsToCheck." + key + ".Amount");
-            checkItems.add(new CheckItem(key, material, name, lore, amount));
+            RainbowMonitor.Type type = RainbowMonitor.Type.valueOf(Objects.requireNonNull(getConfig().getString("ItemToStack." + "key" + ".Amount")).toUpperCase());
+            checkItems.add(new CheckItem(key, material, name, lore, amount, type));
         }
         return checkItems;
     }
@@ -124,17 +125,13 @@ public class FileManager {
     }
 
     // 记录日志
-    public void addLogEntry(String playerName, UUID uuid, String world, String location, String containerType, String itemIdentifier, String count) {
+    public void addLogEntry(String playerName, UUID uuid, String world, String location, String containerType, String itemIdentifier, String count, RainbowMonitor.Type type) {
         FileConfiguration logConfig = getInventory();
         String path = playerName + "(" + uuid.toString() + ")";
         String currentTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("MM-dd-HH:mm:ss"));
         String message;
 
-        if (location.equals("虚拟空间")) {
-            message = String.format("@ %s -> 访问的世界(%s) 的 %s 处的 %s 中有超出限制的物品: %s(%s个)", currentTime, world, location, translateContainerType(containerType), itemIdentifier, count);
-        } else {
-            message = String.format("@ %s -> 访问的世界(%s) 的 %s 处的 %s 中有超出限制的物品: %s(%s个)", currentTime, world, location, translateContainerType(containerType), itemIdentifier, count);
-        }
+        message = String.format("@ %s -> 访问的世界(%s) 的 %s 处的 %s 中有超出限制的物品: %s(%s个) 操作类型: %s", currentTime, world, location, translateContainerType(containerType), itemIdentifier, count, type);
 
         List<String> existingLogs = logConfig.getStringList(path);
         existingLogs.add(message);
@@ -159,7 +156,7 @@ public class FileManager {
             case "CraftDropper":
                 return "投掷器";
             default:
-                return containerType; // 如果没有匹配的翻译，返回原始类型
+                return containerType;
         }
     }
 

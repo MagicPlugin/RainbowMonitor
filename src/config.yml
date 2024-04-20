@@ -40,9 +40,9 @@ ChestGui:
 
 # 需要检查的物品
 ItemsToCheck:
-  # 这是物品的唯一标识符，严格禁止重复，允许中文
+  # 这是物品的唯一标识符，严禁重复，允许中文
   Item1:
-    # 物品的材质，注意大写，这是精准匹配
+    # 物品的材质，这是精准匹配
     Material: PAPER
     # 物品的自定义名称，这是模糊匹配
     Name: 银票
@@ -51,7 +51,13 @@ ItemsToCheck:
       - "手持物品右键以兑换"
     # 物品允许的数量，超过此数量将会触发报告
     Amount: 10
+    # 这是操作类型
+    # inform: 仅通知
+    # delete: 仅删除
+    # both: 都要
+    Type: inform
   Item2:
     # 不配置的变量值不会检查
     Material: DRAGON_EGG
     Amount: 1
+    Type: delete

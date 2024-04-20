@@ -43,43 +43,8 @@ public class EventListener implements Listener {
             return;
         }
 
-//        Bukkit.getLogger().info("[彩虹监察] 开始检查玩家打开的容器");
-
         InventoryHolder holder = event.getInventory().getHolder();
-        String containerType;
-
-        if (holder != null) {
-            containerType = holder.getClass().getSimpleName();
-//            Bukkit.getLogger().info("[彩虹监察] 容器持有者不为 null，容器类型为: " + containerType);
-        } else {
-//            Bukkit.getLogger().info("[彩虹监察] 容器持有者为 null，检查 GUI 标题是否符合 ChestGui 配置");
-            String guiTitle = event.getViewers().isEmpty() ? "" : event.getViewers().get(0).getOpenInventory().getTitle();
-            containerType = "未知";
-
-//            Bukkit.getLogger().info("[彩虹监察] 容器的 Title 为 " + guiTitle);
-
-            if (guiTitle.equals("Crafting")) {
-                containerType = "末影箱";
-            }
-
-            for (Map.Entry<String, List<String>> entry : chestGuiMappings.entrySet()) {
-                for (String titlePart : entry.getValue()) {
-//                    Bukkit.getLogger().info("[彩虹监察] 遍历 Map 图找到: " + titlePart);
-                    if (guiTitle.contains(titlePart)) {
-                        containerType = entry.getKey();
-//                        Bukkit.getLogger().info("[彩虹监察] GUI 标题匹配 ChestGui 配置，容器类型为: " + containerType);
-                        break;
-                    }
-                }
-                if (!containerType.equals("未知")) {
-                    break;
-                }
-            }
-
-            if (containerType.equals("未知")) {
-//                Bukkit.getLogger().info("[彩虹监察] GUI 标题未匹配 ChestGui 配置，容器类型保持未知");
-            }
-        }
+        String containerType = getContainerType(event, holder);
 
         for (CheckItem checkItem : checkItems) {
             int count = 0;
@@ -89,25 +54,76 @@ public class EventListener implements Listener {
                 }
             }
             if (count > checkItem.getAmount()) {
-                if (fileManager.getSendInfoState()) {
-                    String playerName = event.getPlayer().getName();
-                    Location loc = event.getInventory().getLocation();
-                    String location = loc != null ? String.format("%d, %d, %d", loc.getBlockX(), loc.getBlockY(), loc.getBlockZ()) : "虚拟空间";
-                    String message = String.format("§7[§6彩虹监察§7] §7世界(§6%s§7) 的 玩家(§6%s§7) 打开了位于 %s 的容器，其中有超出限制的物品: §6%s§7(§6%s个§7)。", worldDisplayName, playerName, location, checkItem.getIdentifier(), count);
-                    for (String infoPlayer : fileManager.getSendInfoPlayer()) {
-                        Player player = Bukkit.getPlayer(infoPlayer);
-                        if (player != null && player.isOnline()) {
-                            player.sendMessage(message);
+                switch (checkItem.getType()) {
+                    case INFORM:
+                        informPlayer(event, checkItem, worldDisplayName, containerType, count, checkItem.getType());
+                        break;
+                    case BOTH:
+                        informPlayer(event, checkItem, worldDisplayName, containerType, count, checkItem.getType());
+                    case DELETE:
+                        for (int i = 0; i < event.getInventory().getSize(); i++) {
+                            ItemStack itemStack = event.getInventory().getItem(i);
+                            if (itemStack != null && checkItem.matches(itemStack)) {
+                                event.getInventory().setItem(i, null);
+                            }
                         }
-                    }
-                }
 
-                Player player = (Player) event.getPlayer();
-                Location loc = event.getInventory().getLocation();
-                String logLocation = loc != null ? String.format("坐标(%d, %d, %d)", loc.getBlockX(), loc.getBlockY(), loc.getBlockZ()) : "虚拟空间";
-                fileManager.addLogEntry(player.getName(), player.getUniqueId(), worldDisplayName, logLocation, containerType, checkItem.getIdentifier(), String.valueOf(count));
+                        createLog(event, checkItem, worldDisplayName, containerType, count, checkItem.getType());
+                        break;
+                }
+            }
+        }
+    }
+
+    private void informPlayer(InventoryOpenEvent event, CheckItem checkItem, String worldDisplayName, String containerType, int count, RainbowMonitor.Type type) {
+        if (fileManager.getSendInfoState()) {
+            String playerName = event.getPlayer().getName();
+            Location loc = event.getInventory().getLocation();
+            String location = loc != null ? String.format("%d, %d, %d", loc.getBlockX(), loc.getBlockY(), loc.getBlockZ()) : "虚拟空间";
+            String message = String.format("§7[§6彩虹监察§7] §7世界(§6%s§7) 的 玩家(§6%s§7) 打开了位于 %s 的容器，其中有超出限制的物品: §6%s§7(§6%s个§7)。", worldDisplayName, playerName, location, checkItem.getIdentifier(), count);
+            for (String infoPlayer : fileManager.getSendInfoPlayer()) {
+                Player player = Bukkit.getPlayer(infoPlayer);
+                if (player != null && player.isOnline()) {
+                    player.sendMessage(message);
+                }
+            }
+        }
+
+        createLog(event, checkItem, worldDisplayName, containerType, count, type);
+    }
+
+    private void createLog(InventoryOpenEvent event, CheckItem checkItem, String worldDisplayName, String containerType, int count, RainbowMonitor.Type type) {
+        Player player = (Player) event.getPlayer();
+        Location loc = event.getInventory().getLocation();
+        String logLocation = loc != null ? String.format("坐标(%d, %d, %d)", loc.getBlockX(), loc.getBlockY(), loc.getBlockZ()) : "虚拟空间";
+        fileManager.addLogEntry(player.getName(), player.getUniqueId(), worldDisplayName, logLocation, containerType, checkItem.getIdentifier(), String.valueOf(count), type);
+    }
+
+    private String getContainerType(InventoryOpenEvent event, InventoryHolder holder) {
+        String containerType;
+        if (holder != null) {
+            containerType = holder.getClass().getSimpleName();
+        } else {
+            String guiTitle = event.getViewers().isEmpty() ? "" : event.getViewers().get(0).getOpenInventory().getTitle();
+            containerType = "未知";
+
+            if (guiTitle.equals("Crafting")) {
+                containerType = "末影箱";
             }
 
+            for (Map.Entry<String, List<String>> entry : chestGuiMappings.entrySet()) {
+                for (String titlePart : entry.getValue()) {
+                    if (guiTitle.contains(titlePart)) {
+                        containerType = entry.getKey();
+                        break;
+                    }
+                }
+                if (!containerType.equals("未知")) {
+                    break;
+                }
+            }
         }
+
+        return containerType;
     }
 }

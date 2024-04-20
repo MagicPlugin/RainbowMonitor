@@ -16,6 +16,12 @@ public class RainbowMonitor extends JavaPlugin implements Listener {
     private List<CheckItem> checkItems;
     private Map<String, List<String>> chestGui;
 
+    public enum Type {
+        INFORM,
+        DELETE,
+        BOTH
+    }
+
     @Override
     public void onEnable() {
         try {
@@ -37,12 +43,11 @@ public class RainbowMonitor extends JavaPlugin implements Listener {
             Bukkit.getServer().getLogger().info(" ");
             Bukkit.getServer().getLogger().info("  '||    ||' '||''|.         '||''|.   '||    ||'    妙控动力 MagicPowered");
             Bukkit.getServer().getLogger().info("   |||  |||   ||   ||   ||    ||   ||   |||  |||     彩虹系列 RainbowSeries");
-            Bukkit.getServer().getLogger().info("   |'|..'||   ||...|'         || ''|'   |'|..'||     彩虹监察 RainbowMonitor v24.0.1.0");
+            Bukkit.getServer().getLogger().info("   |'|..'||   ||...|'         || ''|'   |'|..'||     彩虹监察 RainbowMonitor v24.0.2.0");
             Bukkit.getServer().getLogger().info("   | '|' ||   ||        ||    ||   |.   | '|' ||     由 JLING 制作");
             Bukkit.getServer().getLogger().info("  .|. | .||. .||.            .||.  '|' .|. | .||.    https://magicpowered.cn");
             Bukkit.getServer().getLogger().info(" ");
-        } catch (
-                Exception e) {
+        } catch (Exception e) {
             Bukkit.getServer().getLogger().info("[彩虹监察] 启动失败!");
             e.printStackTrace();
         }

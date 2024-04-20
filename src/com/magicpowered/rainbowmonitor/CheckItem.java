@@ -8,20 +8,24 @@ import org.bukkit.inventory.ItemStack;
 import java.util.List;
 
 public class CheckItem {
+
     private String identifier;
 
     private Material material;
     private String name;
     private List<String> lore;
     private int amount;
+    private RainbowMonitor.Type type;
+
 
     // 构造函数、getters 和 setters
-    public CheckItem(String identifier, Material material, String name, List<String> lore, int amount) {
+    public CheckItem(String identifier, Material material, String name, List<String> lore, int amount, RainbowMonitor.Type type) {
         this.identifier = identifier;
         this.material = material;
         this.name = name;
         this.lore = lore;
         this.amount = amount;
+        this.type = type;
     }
 
     public boolean matches(ItemStack itemStack) {
@@ -69,4 +73,8 @@ public class CheckItem {
     }
 
     public String getIdentifier() {return identifier;}
+
+    public RainbowMonitor.Type getType() {
+        return type;
+    }
 }
